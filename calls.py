@@ -36,7 +36,9 @@ def list_tasks_from_project(api):
     tasks = api.get_tasks(project_id=project_id)
     print("\033[2JTasks from {}{}\33[0m:".format(color_trans(proj.color), proj.name))
     for i in tasks:
-        print("  -> {}{}\33[0m;".format(prio_trans(i.priority),i.content))
+        print("  -> {}{}\33[0m".format(prio_trans(i.priority),i.content))
+        if len(i.description)>0:
+            print("     {}".format(i.description))
 
 """Create new project"""
 def create_project(api):
@@ -154,7 +156,7 @@ def color_trans(name):
     if name==41:
         return '\u001b[38;5;45m'
     if name==42:
-        return '\u001b[38;5;127m'
+        return '\u001b[38;5;54m'
     if name==44:
         return '\u001b[38;5;200m'
     if name==48:
