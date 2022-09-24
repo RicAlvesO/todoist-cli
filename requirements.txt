@@ -1,0 +1,4 @@
+cryptography==2.8
+requests==2.22.0
+simple_term_menu==1.4.1
+todoist_api_python==2.0.0
