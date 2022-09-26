@@ -4,6 +4,7 @@ import requests
 import secrets
 import webbrowser
 
+"""Function to get token to access TODOIST API"""
 def get_token():
     key = Fernet.generate_key()
     with open(".key.key", "wb") as key_file:
@@ -30,18 +31,19 @@ def get_token():
     else:
         print("Error: state1 != state2\nConnection compromised")
 
-
+"""Verification of token file"""
 def check_token():
     if exists(".token"):
         return
     else:
         get_token()
 
+"""Token Decryption"""
 def load_token():
     key = open(".key.key", "rb").read()
     f = Fernet(key)
     return f.decrypt(open(".token", "rb").read()).decode()
 
-
+"""Main function"""
 if '__main__' == __name__:
     get_token()

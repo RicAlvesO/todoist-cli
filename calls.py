@@ -1,5 +1,6 @@
 from todoist_api_python.api import TodoistAPI
 from simple_term_menu import TerminalMenu
+from datetime import datetime
 
 
 """Gets id of specified project by name"""
@@ -14,18 +15,30 @@ def get_project_by_name(api, name):
 def list_projects(api):
     projects = api.get_projects()
     print("Projects:")
+    child=1
     for i in projects:
-        print("{}  -> {}\33[0m".format(color_trans(i.color),i.name))
+        if i.parent_id==None:
+            child=1
+        else:
+            child=child+1
+        print((child*3*' ')+"-> {}{}\33[0m".format(color_trans(i.color),i.name))
 
-
+"""Shows all projects and their respective tasks"""
 def list_tasks(api):
     projects = api.get_projects()
+    tasks = api.get_tasks()
     print("All Tasks:")
+    child=1;
     for i in projects:
-        print("  -> {}{}\33[0m".format(color_trans(i.color), i.name))
-        tasks = api.get_tasks(project_id=i.id)
+        if i.parent_id==None:
+            child=1
+        else:
+            child=child+1
+        print((3*child*' ')+"-> {}{}\33[0m".format(color_trans(i.color), i.name))
+        child=child+1
         for j in tasks:
-            print("     -> {}{}\33[0m;".format(prio_trans(j.priority),j.content))
+            if j.project_id==i.id:
+                print((3*child*' ')+"-> {}{}\33[0m;".format(prio_trans(j.priority),j.content))
 
 """Shows all tasks from specified project"""
 def list_tasks_from_project(api):
@@ -51,6 +64,21 @@ def create_project(api):
     api.add_project(name,color=color[1])
 
 
+"""Create new project"""
+def create_child_project(api):
+    project = project_menu(api)
+    if project[1]==0:
+        return
+    print("Project: {}".format(int(project[0])))
+    name = input("Project name: ")
+    if len(name)<1:
+        print("Invalid project name")
+        return
+    color = color_menu()
+    print("Color: {}".format(color[0]))
+    api.add_project(name,parent_id=int(project[1]),color=color[1])
+
+"""Creates a task inside a project"""
 def create_task(api):
     project = project_menu(api)
     if project[1]==0:
@@ -60,7 +88,7 @@ def create_task(api):
     if len(name)<1:
         print("Invalid Task")
         return
-    desc = input("Description (Default=Empty): ")
+    desc = input("Description (Default=NONE): ")
     prio=1
     while True:
         inpt = input("Priority (Default=1): ")
@@ -71,16 +99,29 @@ def create_task(api):
         else:
             prio=int(inpt)
             break
+    dt=""
+    while True:
+        dt = input("Limit Date (Default=NONE, Format:YYYY-MM-DD): ")
+        if len(dt)<1:
+            break
+        try:
+            if dt != datetime.strptime(dt, "%Y-%m-%d").strftime('%Y-%m-%d'):
+                raise ValueError
+            break
+        except ValueError:
+            print("Invalid date")
 
     ##############################
     #          IN FUTURE         #
     ##############################
-    # ADD DATES                  #
     # ADD LABELS                 #
     ##############################
+    if len(dt)<1:
+        api.add_task(content=name,description=desc,priority=prio,project_id=project[1])
+    else:
+        api.add_task(content=name,description=desc,priority=prio,project_id=project[1],due_date=dt)
 
-    api.add_task(content=name,description=desc,priority=prio,project_id=project[1])
-
+"""Finishes a task"""
 def close_task(api):
     project_id = project_menu(api)[1]
     if project_id==0:
@@ -98,6 +139,7 @@ def remove_project(api):
     if project_id!=0:
         api.delete_project(project_id)
 
+"""Removes an existing task"""
 def remove_task(api):
     project_id = project_menu(api)[1]
     if project_id==0:
@@ -123,6 +165,7 @@ def project_menu(api):
     menu_entry_index = terminal_menu.show()
     return [names[menu_entry_index],ids[menu_entry_index]]
 
+"""Shows all tasks for selection"""
 def task_menu(tasks):
     names = []
     ids = []
@@ -145,24 +188,25 @@ def color_menu():
 
 """Translates color codes to terminal escape sequences"""
 def color_trans(name):
-    if name==31:
+    if name==31 or name=='red':
         return '\u001b[38;5;160m'
-    if name==32:
+    if name==32 or name=='orange':
         return '\u001b[38;5;208m'
-    if name==33:
+    if name==33 or name=='yellow':
         return '\u001b[38;5;190m'
-    if name==35:
+    if name==35 or name=='lime_green':
         return '\u001b[38;5;46m'
-    if name==41:
+    if name==41 or name=='blue':
         return '\u001b[38;5;45m'
-    if name==42:
+    if name==42 or name=='grape':
         return '\u001b[38;5;54m'
-    if name==44:
+    if name==44 or name=='lavander':
         return '\u001b[38;5;200m'
-    if name==48:
+    if name==48 or name=='grey':
         return '\u001b[38;5;250m'
     return '\33[0m'
     
+"""Gives color to task according to priority"""
 def prio_trans(name):
     if name==1:
         return '\u001b[38;5;83m'
