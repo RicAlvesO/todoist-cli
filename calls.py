@@ -21,7 +21,7 @@ def list_projects(api):
             child=1
         else:
             child=child+1
-        print((child*3*' ')+"-> {}{}\33[0m".format(color_trans(i.color),i.name))
+        print((child*3*' ')+"{}->\33[0m {}".format(color_trans(i.color),i.name))
 
 """Shows all projects and their respective tasks"""
 def list_tasks(api):
@@ -34,11 +34,11 @@ def list_tasks(api):
             child=1
         else:
             child=child+1
-        print((3*child*' ')+"-> {}{}\33[0m".format(color_trans(i.color), i.name))
+        print((3*child*' ')+"{}->\33[0m {}".format(color_trans(i.color), i.name))
         child=child+1
         for j in tasks:
             if j.project_id==i.id:
-                print((3*child*' ')+"-> {}{}\33[0m;".format(prio_trans(j.priority),j.content))
+                print((3*child*' ')+"{}->\33[0m {};".format(prio_trans(j.priority),j.content))
 
 """Shows all tasks from specified project"""
 def list_tasks_from_project(api):
@@ -49,9 +49,11 @@ def list_tasks_from_project(api):
     tasks = api.get_tasks(project_id=project_id)
     print("\033[2JTasks from {}{}\33[0m:".format(color_trans(proj.color), proj.name))
     for i in tasks:
-        print("  -> {}{}\33[0m".format(prio_trans(i.priority),i.content))
+        print("  {}->\33[0m {}".format(prio_trans(i.priority),i.content))
         if len(i.description)>0:
             print("     {}".format(i.description))
+        if i.due.date!=None:
+            print("     {}".format(i.due.date))
 
 """Create new project"""
 def create_project(api):
@@ -61,22 +63,27 @@ def create_project(api):
         return
     color = color_menu()
     print("Color: {}".format(color[0]))
-    api.add_project(name,color=color[1])
+    try:
+        api.add_project(name,color=color[1])
+    except:
+        print("Could not create new project")
 
-
-"""Create new project"""
+"""Create new child project"""
 def create_child_project(api):
     project = project_menu(api)
     if project[1]==0:
         return
-    print("Project: {}".format(int(project[0])))
+    print("Project: {}".format(project[0]))
     name = input("Project name: ")
     if len(name)<1:
         print("Invalid project name")
         return
     color = color_menu()
     print("Color: {}".format(color[0]))
-    api.add_project(name,parent_id=int(project[1]),color=color[1])
+    try: 
+        api.add_project(name,parent_id=project[1],color=color[1])
+    except:
+        print("Could not create new child project!")
 
 """Creates a task inside a project"""
 def create_task(api):
@@ -116,10 +123,13 @@ def create_task(api):
     ##############################
     # ADD LABELS                 #
     ##############################
-    if len(dt)<1:
-        api.add_task(content=name,description=desc,priority=prio,project_id=project[1])
-    else:
-        api.add_task(content=name,description=desc,priority=prio,project_id=project[1],due_date=dt)
+    try:
+        if len(dt)<1:
+            api.add_task(content=name,description=desc,priority=prio,project_id=project[1])
+        else:
+            api.add_task(content=name,description=desc,priority=prio,project_id=project[1],due_date=dt)
+    except:
+        print("Could not create new task")
 
 """Finishes a task"""
 def close_task(api):
@@ -130,8 +140,11 @@ def close_task(api):
     task=task_menu(tasks)
     if task[1]==0: 
         return
-    api.close_task(task_id=task[1])
-    print("Task \'{}\' closed".format(task[0]))
+    try:
+        api.close_task(task_id=task[1])
+        print("Task \'{}\' closed".format(task[0]))
+    except:
+        print("Could not close task")
 
 """Remove existing project"""
 def remove_project(api):
@@ -148,8 +161,11 @@ def remove_task(api):
     task=task_menu(tasks)
     if task[1]==0: 
         return
-    api.delete_task(task_id=task[1])
-    print("Task \'{}\' removed".format(task[0]))
+    try:
+        api.delete_task(task_id=task[1])
+        print("Task \'{}\' removed".format(task[0]))
+    except:
+        print("Could not remove task")
 
 """Shows all projects for selection"""
 def project_menu(api):
